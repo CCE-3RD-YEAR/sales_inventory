@@ -2,20 +2,13 @@
 include('db_connect.php');
 
 try{
-    define("BACKUP_PATH", "C:/");
-
-    $server_name   = "localhost";
-    $username      = "root";
-    $database_name = "sales_inventory_db";
     $date_string   = date("m-d-Y");
 
-    $cmd = "C:/xampp/mysql/bin/mysqldump --routines -h {$server_name} -u {$username} {$database_name} > " . BACKUP_PATH . "{$date_string}_{$database_name}.sql";
+    $cmd = "cmd.exe /C mysqldump --host=" . DB_SERVER . " --user=" . DB_USERNAME . " " . DB_DATABASE . " > " . BACKUP_PATH . "{$date_string}_" . DB_DATABASE . ".sql";
 
     exec($cmd);
 
     Header("Location: index.php?page=backupandrestore");
-} catch(throwable $e){
+} catch(Exception $e){
     die($e);
 }
-
-?>
