@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 22, 2020 at 09:47 AM
+-- Generation Time: Mar 13, 2021 at 09:20 AM
 -- Server version: 10.4.14-MariaDB
--- PHP Version: 7.2.33
+-- PHP Version: 7.4.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -61,8 +61,7 @@ CREATE TABLE `customer_list` (
 --
 
 INSERT INTO `customer_list` (`id`, `name`, `contact`, `address`) VALUES
-(1, 'John Smith', '8747808787', 'Sample Only'),
-(2, 'George Wilson', '+14526-5455-44', 'Sample');
+(3, 'Jay-ann Delos Santos Bete', '09999999', 'wwww');
 
 -- --------------------------------------------------------
 
@@ -91,15 +90,21 @@ INSERT INTO `inventory` (`id`, `product_id`, `qty`, `type`, `stock_from`, `form_
 (8, 4, 50, 1, 'receiving', 1, '{\"price\":\"20\",\"qty\":\"50\"}', 'Stock from Receiving-04377352\r\n', '2020-09-22 11:51:42'),
 (10, 5, 100, 1, 'receiving', 1, '{\"price\":\"20\",\"qty\":\"100\"}', 'Stock from Receiving-04377352\r\n', '2020-09-22 11:53:11'),
 (11, 3, 100, 1, 'receiving', 1, '{\"price\":\"30\",\"qty\":\"100\"}', 'Stock from Receiving-04377352\r\n', '2020-09-22 11:53:11'),
-(13, 4, 10, 2, 'Sales', 1, '{\"price\":\"10\",\"qty\":\"10\"}', 'Stock out from Sales-00000000\r\n', '2020-09-22 15:23:02'),
-(14, 4, 20, 2, 'Sales', 2, '{\"price\":\"10\",\"qty\":\"20\"}', 'Stock out from Sales-17671173\n', '2020-09-22 15:00:46'),
-(15, 4, 10, 2, 'Sales', 3, '{\"price\":\"10\",\"qty\":\"10\"}', 'Stock out from Sales-16042993\n', '2020-09-22 15:01:55'),
-(16, 1, 10, 2, 'Sales', 4, '{\"price\":\"75\",\"qty\":\"10\"}', 'Stock out from Sales-50470080\r\n', '2020-09-22 15:42:59'),
 (18, 1, 2, 2, 'Sales', 0, '{\"price\":\"75\",\"qty\":\"2\"}', 'Stock out from Sales-00000000\r\n', '2020-09-22 15:19:22'),
 (19, 1, 2, 2, 'Sales', 0, '{\"price\":\"75\",\"qty\":\"2\"}', 'Stock out from Sales-00000000\r\n', '2020-09-22 15:20:03'),
-(20, 1, 2, 2, 'Sales', 1, '{\"price\":\"75\",\"qty\":\"2\"}', 'Stock out from Sales-00000000\r\n', '2020-09-22 15:23:02'),
-(21, 3, 10, 2, 'Sales', 4, '{\"price\":\"30\",\"qty\":\"10\"}', 'Stock out from Sales-50470080\r\n', '2020-09-22 15:42:59'),
-(22, 5, 5, 2, 'Sales', 4, '{\"price\":\"25\",\"qty\":\"5\"}', 'Stock out from Sales-50470080\r\n', '2020-09-22 15:42:59');
+(23, 1, 1, 2, 'Sales', 6, '{\"price\":\"75\",\"qty\":\"1\"}', 'Stock out from Sales-00000000\n', '2021-03-13 10:14:25');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `loginattempts`
+--
+
+CREATE TABLE `loginattempts` (
+  `IP` varchar(20) NOT NULL,
+  `Attempts` int(11) NOT NULL,
+  `LastLogin` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -123,7 +128,7 @@ CREATE TABLE `product_list` (
 INSERT INTO `product_list` (`id`, `category_id`, `sku`, `price`, `name`, `description`) VALUES
 (1, 3, '33866164', 75, 'Alcohol Name', 'Alcohol 750ml'),
 (3, 5, '91643291', 30, 'Lemon Iced Tea', 'Lemon Iced Tea 350ml'),
-(4, 4, '11762968', 10, 'Chips (big)', 'Big Chip'),
+(4, 4, '11762968', 10, 'Chocolate cupcake', 'Drizzled with chocolate chips'),
 (5, 1, '74628529', 25, 'Tuna', 'Tuna');
 
 -- --------------------------------------------------------
@@ -168,10 +173,7 @@ CREATE TABLE `sales_list` (
 --
 
 INSERT INTO `sales_list` (`id`, `ref_no`, `customer_id`, `total_amount`, `amount_tendered`, `amount_change`, `date_updated`) VALUES
-(1, '00000000\r\n', 0, 250, 300, 50, '2020-09-22 15:19:22'),
-(2, '17671173\n', 2, 200, 200, 0, '2020-09-22 15:00:46'),
-(3, '16042993\n', 2, 100, 1000, 900, '2020-09-22 15:01:55'),
-(4, '50470080\n', 0, 1175, 1200, 25, '2020-09-22 15:42:59');
+(6, '00000000\n', 0, 75, 100, 25, '2021-03-13 10:14:25');
 
 -- --------------------------------------------------------
 
@@ -227,7 +229,7 @@ CREATE TABLE `users` (
   `name` varchar(200) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(200) NOT NULL,
-  `type` tinyint(1) NOT NULL DEFAULT 2 COMMENT '1=admin , 2 = cashier'
+  `type` tinyint(1) NOT NULL COMMENT '''1=admin , 2 = cashier'''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
@@ -235,7 +237,11 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `username`, `password`, `type`) VALUES
-(1, 'Administrator', 'admin', 'admin123', 1);
+(1, 'SuperAdmin', 'SuperAdmin', '7488e331b8b64e5794da3fa4eb10ad5d', 1),
+(2, 'Gelyn Delos Santos Bete', 'gelyn27', '81b79be98d0eaea3108ce6a3b53d7be4', 2),
+(3, 'Jay-ann Delos Santos Bete', 'jayaann', 'bb0ed6ad56f41c6de469776171261226', 2),
+(4, 'Levi Ackerman', 'leviackerman', '20681abf075572e27b388f076ea976a3', 2),
+(5, 'Kuchel', 'kuchelle', 'f1534cd6b03bca4163d5773a988dc3bc', 1);
 
 --
 -- Indexes for dumped tables
@@ -309,13 +315,13 @@ ALTER TABLE `category_list`
 -- AUTO_INCREMENT for table `customer_list`
 --
 ALTER TABLE `customer_list`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `inventory`
 --
 ALTER TABLE `inventory`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `product_list`
@@ -333,7 +339,7 @@ ALTER TABLE `receiving_list`
 -- AUTO_INCREMENT for table `sales_list`
 --
 ALTER TABLE `sales_list`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `supplier_list`
@@ -351,7 +357,7 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
