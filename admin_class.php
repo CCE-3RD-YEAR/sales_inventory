@@ -1,48 +1,45 @@
 <?php
 session_start();
 ini_set('display_errors', 1);
-Class Action {
+class Action {
 	private $db;
 
 	public function __construct() {
 		ob_start();
-   	include 'db_connect.php';
-    
-    $this->db = $conn;
+   	    include 'db_connect.php';
+        $this->db = $conn;
 	}
 	function __destruct() {
 	    $this->db->close();
 	    ob_end_flush();
 	}
 
+	// Authentication
+
 	function login(){
+        $ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+        $confirm = $this->confirmIPAddress($ip);
+        if($confirm['status'] === 2){
+            return $confirm;
+        }
 		extract($_POST);
-		$qry = $this->db->query("SELECT * FROM users where username = '".$username."' and password = '".md5($password)."' ");
+		$qry = $this->db->query("SELECT * FROM users where username = '" . $username . "' and password = '" . md5($password) . "' ");
+		// If login success...
 		if($qry->num_rows > 0){
 			foreach ($qry->fetch_array() as $key => $value) {
-				if($key != 'passwors' && !is_numeric($key))
+				if(!is_numeric($key) && $key !== 'password') {
 					$_SESSION['login_'.$key] = $value;
+                }
 			}
-				return 1;
-		}else{
-			return 3;
+			$this->clearLoginAttempts($ip);
+			return [
+			    'status' => 1,
+            ];
 		}
+		// If login failed, and you are restricted...
+        return $this->addLoginAttempt($ip);
 	}
-	function login2(){
-		extract($_POST);
-		$qry = $this->db->query("SELECT * FROM user_info where email = '".$email."' and password = '".md5($password)."' ");
-		if($qry->num_rows > 0){
-			foreach ($qry->fetch_array() as $key => $value) {
-				if($key != 'passwors' && !is_numeric($key))
-					$_SESSION['login_'.$key] = $value;
-			}
-			$ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-			$this->db->query("UPDATE cart set user_id = '".$_SESSION['login_user_id']."' where client_ip ='$ip' ");
-				return 1;
-		}else{
-			return 3;
-		}
-	}
+
 	function logout(){
 		session_destroy();
 		foreach ($_SESSION as $key => $value) {
@@ -50,6 +47,7 @@ Class Action {
 		}
 		header("location:login.php");
 	}
+
 	function logout2(){
 		session_destroy();
 		foreach ($_SESSION as $key => $value) {
@@ -57,6 +55,81 @@ Class Action {
 		}
 		header("location:../index.php");
 	}
+
+    // PURPOSE: If login is success, check first if still restricted from logging in.
+    function confirmIPAddress($value) {
+	    $q = "SELECT Attempts, (CASE when lastlogin is not NULL and DATE_ADD(lastlogin, INTERVAL " . TIME_PERIOD . ")>NOW() then 1 else 0 end) as `Denied`, (CASE when lastlogin is not NULL and DATE_ADD(lastlogin, INTERVAL " . TIME_PERIOD . ")>NOW() then TIMESTAMPDIFF(SECOND,NOW(),DATE_ADD(lastlogin, INTERVAL " . TIME_PERIOD . ")) else 0 end) as TimeLeft FROM loginattempts WHERE ip = '$value'";
+        $data = $this->db->query($q)->fetch_array();
+
+        //Verify that at least one login attempt is in database
+
+        if (!$data) {
+            return [
+                'status' => 1,
+            ];
+        }
+        if ($data["Attempts"] >= ATTEMPTS_NUMBER)
+        {
+            if($data["Denied"] === '1')
+            {
+                return [
+                    'status' => 2,
+                    'message' => 'Login denied.',
+                    'time_left' => $data['TimeLeft'],
+                ];
+            }
+            else
+            {
+                $this->clearLoginAttempts($value);
+            }
+        }
+        return [
+            'status' => 1,
+        ];;
+    }
+
+    // PURPOSE: If failed to login, add attempt to database.
+    function addLoginAttempt($value) {
+
+        //Increase number of attempts. Set last login attempt if required.
+
+        $q = "SELECT * FROM " . TBL_ATTEMPTS . " WHERE ip = '$value'";
+        $data = $this->db->query($q)->fetch_array();
+
+        if($data)
+        {
+            $attempts = $data["Attempts"]+1;
+
+            if($attempts === 3) {
+                $q = "UPDATE " . TBL_ATTEMPTS . " SET attempts=" . $attempts . ", lastlogin=NOW() WHERE ip = '$value'";
+                $this->db->query($q);
+                return $this->confirmIPAddress($value);
+            }
+            else {
+                $q = "UPDATE " . TBL_ATTEMPTS . " SET attempts=" . $attempts . " WHERE ip = '$value'";
+                $this->db->query($q);
+                return [
+                    'status' => 3,
+                    'message' => "Username or password is incorrect. (Attempt $attempts/" . ATTEMPTS_NUMBER .")",
+                ];
+            }
+        }
+        else {
+            $q = "INSERT INTO ".TBL_ATTEMPTS." (attempts,IP,lastlogin) values (1, '$value', NOW())";
+            $this->db->query($q);
+            return [
+                'status' => 3,
+                'message' => "Username or password is incorrect. (Attempt 1/" . ATTEMPTS_NUMBER .")",
+            ];
+        }
+    }
+
+    function clearLoginAttempts($value) {
+        $q = "UPDATE " . TBL_ATTEMPTS . " SET attempts = 0 WHERE ip = '$value'";
+        $this->db->query($q);
+    }
+
+	// Admin Controls
 
 	function save_user(){
 		extract($_POST);

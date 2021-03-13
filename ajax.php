@@ -8,7 +8,7 @@ $crud = new Action();
 if($action == 'login'){
 	$login = $crud->login();
 	if($login)
-		echo $login;
+		echo json_encode($login);
 }
 if($action == 'login2'){
 	$login = $crud->login2();

@@ -80,6 +80,7 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
   			<div class="card col-md-8">
   				<div class="card-body">
   					<form id="login-form" >
+                        <div id="divMessage"></div>
   						<div class="form-group">
   							<label for="username" class="control-label">Username</label>
   							<input type="text" id="username" name="username" class="form-control">
@@ -88,7 +89,7 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
   							<label for="password" class="control-label">Password</label>
   							<input type="password" id="password" name="password" class="form-control">
   						</div>
-  						<center><button class="btn-sm btn-block btn-wave col-md-4 btn-primary">Login</button></center>
+  						<center><button id="btnLogin" class="btn-sm btn-block btn-wave col-md-4 btn-primary">Login</button></center>
   					</form>
   				</div>
   			</div>
@@ -104,25 +105,45 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
 <script>
 	$('#login-form').submit(function(e){
 		e.preventDefault()
-		$('#login-form button[type="button"]').attr('disabled',true).html('Logging in...');
-		if($(this).find('.alert-danger').length > 0 )
-			$(this).find('.alert-danger').remove();
+		$('#btnLogin').attr('disabled', true).html('Logging in...');
+		$('#divMessage').empty();
 		$.ajax({
 			url:'ajax.php?action=login',
 			method:'POST',
 			data:$(this).serialize(),
 			error:err=>{
 				console.log(err)
-		$('#login-form button[type="button"]').removeAttr('disabled').html('Login');
-
+		        $('#btnLogin').removeAttr('disabled').html('Login');
 			},
-			success:function(resp){
-				if(resp == 1){
-					location.href ='index.php?page=home';
-				}else{
-					$('#login-form').prepend('<div class="alert alert-danger">Username or password is incorrect.</div>')
-					$('#login-form button[type="button"]').removeAttr('disabled').html('Login');
-				}
+			success:function(response){
+                const res = JSON.parse(response)
+                console.log(res)
+                switch (res.status) {
+                    case 1:
+                        location.href ='index.php?page=home';
+                        break;
+                    case 2:
+                        $('#btnLogin').attr('disabled', true);
+                        let start = res.time_left;
+
+                        const countdown = setInterval(function () {
+                            const minutes = Math.floor(start / 60);
+                            const seconds = start % 60
+                            $('#btnLogin').html(`Login (${start}s)`)
+                            $('#divMessage').html(`<div class="alert alert-danger">${res.message} (Time Left: ${minutes} minutes & ${seconds} seconds)</div>`)
+                            start-=1;
+                        }, 1000)
+
+                        setTimeout(function () {
+                            clearInterval(countdown)
+                            $('#btnLogin').removeAttr('disabled').html('Login');
+                            $('#divMessage').empty();
+                        }, res.time_left * 1000)
+                        break;
+                    case 3:
+                        $('#divMessage').html('<div class="alert alert-danger">' + res.message + '</div>')
+                    	$('#btnLogin').removeAttr('disabled').html('Login');
+                }
 			}
 		})
 	})
