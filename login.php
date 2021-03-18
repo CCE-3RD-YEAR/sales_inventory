@@ -79,7 +79,7 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
   		<div id="login-right">
   			<div class="card col-md-8">
   				<div class="card-body">
-  					<form id="login-form" >
+  					<form id="login-form">
                         <div id="divMessage"></div>
   						<div class="form-group">
   							<label for="username" class="control-label">Username</label>
@@ -89,9 +89,25 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
   							<label for="password" class="control-label">Password</label>
   							<input type="password" id="password" name="password" class="form-control">
   						</div>
-  						<center><button id="btnLogin" class="btn-sm btn-block btn-wave col-md-4 btn-primary">Login</button></center>
-  					</form>
+                        <button id="btnLogin" class="btn-sm btn-block btn-wave col-md-4 btn-primary mx-auto">Login</button>
+                    </form>
+                    <div id="divLockout" class="mt-4">
+                        <div id="lockout-card" class="card">
+                            <div class="card-body">
+                                <h5 class="text-center">Lockout Form</h5>
+                                <div id="divMessageLockout"></div>
+                                <form id="lockout-form">
+                                    <div class="form-group">
+                                        <label for="pin" class="control-label">Admin Secret Key</label>
+                                        <input type="password" id="pin" name="pin" class="form-control">
+                                    </div>
+                                    <button id="btnUnlock" class="btn-sm btn-block btn-wave col-md-4 btn-primary mx-auto">Unlock</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
   				</div>
+
   			</div>
   		</div>
    
@@ -103,6 +119,10 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
 
 </body>
 <script>
+    var countdown;
+    var noob = 'noob';
+    // Login Form
+    $('#divLockout').hide();
 	$('#login-form').submit(function(e){
 		e.preventDefault()
 		$('#btnLogin').attr('disabled', true).html('Logging in...');
@@ -124,21 +144,8 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
                         break;
                     case 2:
                         $('#btnLogin').attr('disabled', true);
-                        let start = res.time_left;
-
-                        const countdown = setInterval(function () {
-                            const minutes = Math.floor(start / 60);
-                            const seconds = start % 60
-                            $('#btnLogin').html(`Login (${start}s)`)
-                            $('#divMessage').html(`<div class="alert alert-danger">${res.message} (Time Left: ${minutes} minutes & ${seconds} seconds)</div>`)
-                            start-=1;
-                        }, 1000)
-
-                        setTimeout(function () {
-                            clearInterval(countdown)
-                            $('#btnLogin').removeAttr('disabled').html('Login');
-                            $('#divMessage').empty();
-                        }, res.time_left * 1000)
+                        $('#divLockout').show();
+                        startTimer(res);
                         break;
                     case 3:
                         $('#divMessage').html('<div class="alert alert-danger">' + res.message + '</div>')
@@ -147,5 +154,57 @@ $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
 			}
 		})
 	})
+
+    // Lockout Form
+    $('#lockout-form').submit(function (e){
+        e.preventDefault();
+        $('#btnUnlock').attr('disabled', true).html('Unlocking...');
+        $('#divMessageLockout').empty();
+        $.ajax({
+            url:'ajax.php?action=lockout',
+            method:'POST',
+            data:$(this).serialize(),
+            error:err=>{
+                console.log(err)
+                $('#btnUnlock').removeAttr('disabled').html('Unlock');
+            },
+            success:function(response){
+                const res = JSON.parse(response)
+                console.log(res)
+                switch (res.status) {
+                    case 1: // success
+                        stopTimer();
+                        break;
+                    default:
+                        $('#divMessageLockout').html('<div class="alert alert-danger">' + res.message + '</div>')
+                        $('#btnUnlock').removeAttr('disabled').html('Unlock');
+                }
+            }
+        })
+    })
+
+    // Timer Stuff
+    function startTimer(res) {
+        let start = res.time_left
+	    countdown = setInterval(function () {
+            const minutes = Math.floor(start / 60);
+            const seconds = start % 60
+            $('#btnLogin').html(`Login (${start}s)`)
+            $('#divMessage').html(`<div class="alert alert-danger">${res.message} (Time Left: ${minutes} minutes & ${seconds} seconds)</div>`)
+            start-=1;
+        }, 1000)
+
+        setTimeout(function () {
+            stopTimer();
+        }, res.time_left * 1000)
+    }
+
+    function stopTimer(){
+        countdown && clearInterval(countdown)
+        $('#btnLogin').removeAttr('disabled').html('Login');
+        $('#divMessage').empty();
+        $('#btnUnlock').removeAttr('disabled').html('Unlock');
+        $('#divLockout').hide();
+    }
 </script>	
 </html>

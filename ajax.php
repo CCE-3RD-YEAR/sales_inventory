@@ -10,6 +10,14 @@ if($action == 'login'){
 	if($login)
 		echo json_encode($login);
 }
+
+if($action == 'lockout'){
+    $lockout = $crud->lockout();
+    if($lockout){
+        echo json_encode($lockout);
+    }
+}
+
 if($action == 'login2'){
 	$login = $crud->login2();
 	if($login)

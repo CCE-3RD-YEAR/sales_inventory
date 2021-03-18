@@ -40,6 +40,23 @@ class Action {
         return $this->addLoginAttempt($ip);
 	}
 
+	function lockout(){
+        $ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+        extract($_POST);
+        $qry = $this->db->query("select * from system_settings where `key` = 'secret_key' and value = '$pin'");
+        if($qry->num_rows > 0){
+            $this->clearLoginAttempts($ip);
+            return [
+                'status' => 1,
+            ];
+        }else{
+            return [
+                'status' => 2,
+                'message' => 'Secret Key is incorrect.'
+            ];
+        }
+    }
+
 	function logout(){
 		session_destroy();
 		foreach ($_SESSION as $key => $value) {
